@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<title>Pac-Man Pathfinding with A*</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@500;700&display=block" rel="stylesheet">
+<script>if(/[?&]rec\b/.test(location.search))document.documentElement.classList.add("rec")</script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="boot"><div class="bt">CHECKING YOUR BROWSER</div><div class="bd"><i></i><i></i><i></i><i></i><i></i></div><div class="pbar"><b id="bootBar"></b></div><div id="bootStep"></div></div>
+<div id="stage">
+
+  <div id="hud"><div><span class="k">STAGE</span><br><span class="v" id="hudStage">01/17</span><span id="pace" class="wait" aria-hidden="true"><i></i></span></div>
+    <div><span class="k" id="hudK">1UP</span><br><span class="v" id="hudV">00</span></div>
+    <div><span class="k">HIGH SCORE</span><br><span class="v">OPTIMAL</span></div></div>
+
+  <!-- 1 · TITLE (attract screen) -->
+  <section class="slide" id="s-title" data-builds="2" data-k="INTRO TO AI" data-v="AUTUMN 2026">
+    <div id="tPac" data-build="1" class="abs" style="top:0;right:0;bottom:0;left:0">
+      <div class="logos sm abs" style="left:0;right:0;top:12px"></div>
+      <div class="abs" style="left:0;right:0;top:134px;text-align:center">
+        <div style="font-size:84px;color:var(--pac);letter-spacing:4px;text-shadow:4px 4px 0 #ff8a00,8px 8px 0 #d43c00,12px 12px 0 #5a0c00,0 0 40px rgba(255,230,0,.35)">PATHFINDING</div>
+        <div style="margin-top:30px;font-size:46px;color:var(--cyan);text-shadow:4px 4px 0 #0039b8,8px 8px 0 #001660">WITH <span style="color:#fff;text-shadow:4px 4px 0 var(--red),8px 8px 0 #600">A*</span></div>
+      </div>
+      <canvas id="titleStrip" class="abs glow" style="left:128px;top:366px"></canvas>
+      <div class="abs t18 blink y" id="pickMsg" style="left:0;right:0;top:492px;text-align:center"></div>
+      <div id="roster" class="abs" style="left:0;top:548px;width:1600px;height:290px"></div>
+      <div class="abs t16 d" style="left:0;right:0;top:862px;text-align:center">INSTRUCTOR · <span class="w">TRONG-NGHIA NGUYEN</span></div>
+    </div>
+    <button id="titleNext" aria-label="Next slide">▶</button>
+    <button id="legacyBtn" aria-label="Old browser mode (lite graphics)" aria-pressed="false" title="Old browser mode"><svg viewBox="0 0 16 16" width="34" height="34" shape-rendering="crispEdges"><path d="M9 0 3 9h4l-1 7 7-10H9z" fill="currentColor"/></svg></button>
+    <canvas id="glc" class="abs" style="left:0;top:0;width:1600px;height:1000px"></canvas>
+  </section>
+
+  <!-- 2 · HOOK -->
+  <section class="slide depth" id="s-hook" data-builds="3" data-k="01 · THE PROBLEM" data-v="EAT EVERY DOT">
+    <div class="logos sm abs" style="left:0;right:0;top:12px"></div>
+    <div class="abs cast-key"><span><canvas class="sp s" data-i="pac"></canvas>A* + MST</span><span><canvas class="sp s" data-i="#ff2d2d"></canvas>A* + Σ</span><span><canvas class="sp s" data-i="#00f0ff"></canvas>BFS</span></div>
+    <div class="h2">ONE JOB: <span>EAT EVERY DOT</span></div>
+    <div data-build="0" data-until="1">
+      <div class="panel" style="left:376px;top:172px;padding:8px"><canvas id="hookSolo" class="glow"></canvas></div>
+      <div data-build="1" data-until="1" class="abs t22 lh" style="left:0;right:0;top:800px;text-align:center">
+        <div>ONE DOT? <span class="g">EASY.</span> ONE SHORTEST PATH.</div>
+        <div>EVERY DOT, SHORTEST ROUTE? <span class="r">ORDER MATTERS.</span></div>
+      </div>
+    </div>
+    <div data-build="2">
+      <div class="abs row t18" style="left:120px;top:170px;gap:16px"><canvas class="sp" data-i="#ff2d2d"></canvas><span class="r">1UP · A* + Σ DISTANCES</span></div>
+      <div class="abs row t18" style="left:856px;top:170px;gap:16px"><canvas class="sp" data-i="pac"></canvas><span class="y">2UP · A* + NEAREST + MST</span></div>
+      <div class="panel" style="left:120px;top:240px;padding:8px"><canvas id="hookA" class="glow"></canvas></div>
+      <div class="panel" style="left:856px;top:240px;padding:8px"><canvas id="hookB" class="glow"></canvas></div>
+      <div class="abs" style="left:120px;top:720px;width:640px"><div class="t16 d">STEPS</div><div class="row" style="gap:28px;margin-top:14px"><span class="w" style="font-size:64px" id="hookAn">0</span><span class="t28 r" id="hookAb"></span></div></div>
+      <div class="abs" style="left:856px;top:720px;width:640px"><div class="t16 d">STEPS</div><div class="row" style="gap:28px;margin-top:14px"><span class="w" style="font-size:64px" id="hookBn">0</span><span class="t28 g" id="hookBb"></span></div></div>
+    </div>
+    <div data-build="3" class="panel pipe" style="left:48px;top:848px;width:1504px;height:104px">
+      <span class="ptitle">PIPELINE</span>
+      <span class="st">MAZE</span><i>→</i><span class="st y">STATE</span><i>→</i><span class="st y">A* + h</span><i>→</i><span class="st g">PATH</span>
+      <span class="sep">220 DOTS?</span><span class="st p">ANNEALING</span>
+      <span class="sep">GHOSTS?</span><span class="st r">MINIMAX</span>
+    </div>
+  </section>
+
+  <!-- 3 · STATE -->
+  <section class="slide" id="s-state" data-builds="3" data-k="01 · THE PROBLEM" data-v="THE STATE">
+    <div class="h2">THE STATE IS NOT JUST <span>WHERE PAC-MAN STANDS</span></div>
+    <div class="panel" style="left:48px;top:172px;padding:8px"><canvas id="stateBoard" class="glow"></canvas></div>
+    <div data-build="0" data-until="0" class="panel" style="left:580px;top:172px;width:972px;height:464px;padding:44px">
+      <div class="t24 lh">ONE DOT <span class="d">→</span> STATE = <span class="y">POSITION</span></div>
+      <div class="t24 lh" style="margin-top:26px">5×5 GRID <span class="d">→</span> AT MOST <span class="c">25 STATES</span></div>
+      <div class="t24 lh g" style="margin-top:26px">SEARCH FINISHES INSTANTLY.</div>
+      <div class="t16 d lh" style="margin-top:48px">THE NUMBERS ON THE BOARD COUNT THE TILES.</div>
+    </div>
+    <div data-build="0" data-until="0" class="panel io" style="left:580px;top:676px;width:972px;height:248px;padding:26px 34px">
+      <div class="ptitle">THE TASK</div>
+      <div class="t18 lh" style="margin-top:20px"><span class="c">INPUT&nbsp;</span> MAZE GRID · PAC-MAN'S START · DOT TILES</div>
+      <div class="t18 lh" style="margin-top:14px"><span class="y">OUTPUT</span> SHORTEST MOVE LIST THAT EATS EVERY DOT</div>
+      <div class="t13 d lh" style="margin-top:16px">EACH MOVE (UP / DOWN / LEFT / RIGHT) COSTS 1.</div>
+    </div>
+    <div data-build="1" data-until="1">
+      <div class="panel" style="left:600px;top:172px;padding:8px"><canvas id="miniA" class="glow"></canvas></div>
+      <div class="panel" style="left:1100px;top:172px;padding:8px"><canvas id="miniB" class="glow"></canvas></div>
+      <div class="abs t18 lh" style="left:600px;top:470px;width:420px"><span class="dt">3 DOTS LEFT</span><br>12 MORE STEPS</div>
+      <div class="abs t18 lh" style="left:1100px;top:470px;width:420px"><span class="dt">1 DOT LEFT</span><br>4 MORE STEPS</div>
+      <div class="abs t28 y" style="left:600px;top:600px">SAME TILE.<br><br><span class="r">DIFFERENT FUTURES.</span></div>
+    </div>
+    <div data-build="2">
+      <div class="panel code" style="left:580px;top:172px;width:972px;height:150px;padding:26px 30px">
+        <div class="mono t28" id="morphA">state = (x, y, <span class="o">{d0, d1, d2}</span>)</div>
+        <div class="mono t28" id="morphB" style="display:none">state = (x, y, <span class="y">mask</span>)</div>
+        <div class="mono t20" style="color:#4b5596;margin-top:14px"># eat dot i  →  mask &amp; ~(1 &lt;&lt; i)</div>
+      </div>
+      <div class="panel" style="left:580px;top:356px;width:972px;height:200px;padding:24px 30px">
+        <div class="row" style="gap:44px">
+          <div><div class="ptitle" style="margin-bottom:14px">MASK</div><div class="mbits" id="stateBits"></div></div>
+          <div class="t16 lh" style="flex:1"><div class="d">BIT i = 1 → DOT i STILL THERE</div><div id="stateEv" class="y" style="margin-top:10px;min-height:64px"></div></div>
+        </div>
+      </div>
+    </div>
+    <div data-build="3" class="panel" style="left:580px;top:590px;width:972px;height:300px;padding:28px 34px">
+      <div class="row" style="justify-content:space-between"><div class="t24">STATES = 25 × 2<sup class="y" id="kSup" style="font-size:16px">3</sup></div><div class="t20 d" id="kLabel">k = 3</div></div>
+      <div class="y" style="font-size:64px;margin:24px 0 10px;text-shadow:4px 4px 0 #b34700" id="stateCount">200</div>
+      <input type="range" class="pac" id="kSlider" min="1" max="16" value="3">
+    </div>
+  </section>
+
+  <!-- 4 · TRACE -->
+  <section class="slide depth" id="s-trace" data-builds="3" data-k="02 · THE ALGORITHM" data-v="A* TRACED LIVE">
+    <div class="h2">A* IN 18 LINES · <span>TRACED LIVE</span></div>
+    <div class="panel code" id="tCode" style="left:48px;top:150px;width:640px;height:628px"><div class="hd"><span>astar.py <span id="tTip" class="tip"></span></span><span>H = Σ MANHATTAN</span></div>
+      <div class="lines" id="tLines"><canvas class="ip" id="tIP" width="13" height="13"></canvas></div></div>
+    <div class="panel row" style="left:48px;top:806px;width:640px;height:118px;padding:14px 10px;align-items:stretch">
+      <div class="wc"><b>POS</b><div class="wv" id="wPos"></div></div>
+      <div class="wc" style="flex:1.5"><b>MASK</b><div class="wv" id="wMask"></div></div>
+      <div class="wc"><b>G</b><div class="wv" id="wG"></div></div>
+      <div class="wc"><b>H</b><div class="wv" id="wH"></div></div>
+      <div class="wc"><b>F=G+H</b><div class="wv" id="wF"></div></div>
+    </div>
+    <div class="panel" style="left:712px;top:150px;width:470px;height:470px;padding:8px"><canvas id="traceBoard" class="glow"></canvas></div>
+    <div id="tBanner" class="abs" style="left:712px;top:330px;width:470px;text-align:center;font-size:25px;color:var(--pac);text-shadow:3px 3px 0 #c00;display:none;z-index:5"><span class="blink">STAGE CLEAR!</span><div class="t18 w" style="margin-top:18px;text-shadow:none">COST 10 · h SAID 13</div></div>
+    <div class="panel" style="left:712px;top:648px;width:470px;height:130px;padding:18px 20px"><div id="tMsg" class="w" style="font-size:15px;line-height:1.7"></div><span class="t13" style="position:absolute;right:16px;bottom:12px"><span class="d">EVENT</span> <span class="w" id="tEvt">00/00</span> <span class="blink y">▼</span></span><div class="evbar"><i id="tEvBar"></i></div></div>
+    <div class="abs row" style="left:712px;top:806px;width:470px;justify-content:space-around">
+      <button class="ab" id="tStep"><i data-g="▶"></i>STEP</button>
+      <button class="ab y" id="tPlay"><i data-g="»"></i><span id="tPlayL">AUTO</span></button>
+      <button class="ab g" id="tFast"><i data-g="2X"></i><span id="tFastL">1X SPEED</span></button>
+      <button class="ab b" id="tReset"><i data-g="↺"></i>RESET</button>
+    </div>
+    <div class="panel" style="left:1206px;top:150px;width:346px;height:774px;padding:16px 14px">
+      <div class="t13 w" style="text-align:center;line-height:1.8">OPEN LIST<br><span class="r">LOWEST F WINS</span></div>
+      <div class="th"><span>RANK</span><span>F</span><span>H</span><span>G</span><span>STATE</span></div>
+      <div class="rows" id="tRows"></div><div id="tMore" class="t13 d" style="text-align:center;margin-top:10px"></div>
+      <div class="abs t13 d" style="left:14px;right:14px;bottom:16px;line-height:2"><span class="y">▣</span> IN OPEN LIST · NUMBER = F<br><span style="color:#3b55ff">■</span> EXPANDED <span class="w" id="tExp">0</span><br><span class="r">✕</span> NOT AN IMPROVEMENT</div>
+    </div>
+    <div data-build="1" data-until="1" class="panel callout" style="left:712px;top:150px;width:470px;height:774px;z-index:6">
+      <h3><span class="n">1</span>STATE = (POS, BITMASK)</h3>
+      <p>DOTS LEFT LIVE AS BITS IN ONE INTEGER.</p>
+      <p>EATING A DOT IS <span class="y">ONE AND</span>. GOAL TEST IS <span class="y">MASK == 0</span>.</p>
+      <p>THE STATE FITS IN <span class="y">ONE DICT KEY</span> → <span class="g">FAST LOOKUP</span>.</p>
+    </div>
+    <div data-build="2" data-until="2" class="panel callout" style="left:712px;top:150px;width:470px;height:774px;z-index:6">
+      <h3><span class="n">2</span>BREAK TIES WITH H</h3>
+      <p>MANY STATES SHARE THE SAME F.</p>
+      <p>THE HEAP COMPARES <span class="y">(F, H, …)</span>, SO AMONG EQUAL F IT PICKS THE ONE <span class="g">CLOSER TO DONE</span>.</p>
+      <p>MEASURED: <span class="y">20–40% FEWER</span> EXPANSIONS. FOR FREE.</p>
+    </div>
+    <div data-build="3" class="panel callout" style="left:712px;top:150px;width:470px;height:774px;z-index:6">
+      <h3><span class="n">3</span>NO CLOSED SET. SKIP STALE COPIES.</h3>
+      <p>THE HEAP CAN'T UPDATE AN ENTRY, SO A CHEAPER ROUTE IS JUST <span class="y">PUSHED AGAIN</span>.</p>
+      <p>LINE 7: OLD COPY WITH WORSE G POPS OUT → <span class="r">SKIP IT</span>.</p>
+      <p>A STATE CAN <span class="g">RE-OPEN</span> IF A CHEAPER PATH SHOWS UP LATER.</p>
+    </div>
+  </section>
+
+  <!-- 5 · HEURISTIC -->
+  <section class="slide" id="s-heur" data-builds="2" data-k="03 · THE HEURISTIC" data-v="ADMISSIBLE?">
+    <div class="abs cast-key"><span><canvas class="sp s" data-i="pac"></canvas>A* + MST</span><span><canvas class="sp s" data-i="#ff2d2d"></canvas>A* + Σ</span><span><canvas class="sp s" data-i="#00f0ff"></canvas>BFS</span></div>
+    <div class="h2">A* IS ONLY AS GOOD AS <span>ITS H</span></div>
+    <div class="panel" style="left:48px;top:164px;width:1504px;height:178px;padding:30px 40px;text-align:center">
+      <div class="t40">f(n) = <span class="o">g(n)</span> + <span class="c">h(n)</span></div>
+      <div class="t13 d" style="margin-top:12px"><span class="o" style="margin-right:120px">PAID SO FAR</span><span class="c" style="margin-left:140px">GUESS OF WHAT'S LEFT</span></div>
+      <div class="t18" style="margin-top:22px">ADMISSIBLE: <span class="c">h(n)</span> ≤ <span class="g">h*(n)</span> · <span class="y">NEVER OVERESTIMATES</span> → A* IS OPTIMAL</div>
+    </div>
+    <div data-build="1" class="panel" style="left:48px;top:388px;width:640px;height:530px;padding:26px 30px">
+      <div class="ptitle">3 DOTS IN A ROW</div>
+      <canvas id="rowBoard" class="glow" style="margin:22px auto 0"></canvas>
+      <div class="t22 lh" style="margin-top:24px">Σ = <span id="hx1" class="r">1</span> + <span id="hx2" class="r">2</span> + <span id="hx3" class="r">3</span> = <span class="r">6</span></div>
+      <div class="t22 lh" id="hTrue" style="opacity:0">TRUE COST = <span class="g">3</span></div>
+      <div class="stamp" id="stamp" style="right:30px;bottom:44px">OVERESTIMATES 2×</div>
+    </div>
+    <div data-build="2" class="panel" style="left:720px;top:388px;width:832px;height:530px;padding:22px 30px">
+      <div class="row" style="justify-content:space-between"><div class="ptitle">TRAP MAZE · SAME START</div><button class="ab sm b" id="trapRun" style="flex-direction:row;margin-top:-6px"><i data-g="↺" style="--z:44px"></i>REPLAY</button></div>
+      <div class="row" style="gap:40px;margin-top:8px">
+        <div><div class="row t13" style="gap:12px;height:40px"><canvas class="sp s" data-i="#ff2d2d"></canvas><span class="r">A* + Σ</span></div><canvas id="trapA" class="glow"></canvas>
+          <div class="t16 d" style="margin-top:12px">STEPS <span class="w t32" id="trapAn">0</span></div></div>
+        <div><div class="row t13" style="gap:12px;height:40px"><canvas class="sp s" data-i="pac"></canvas><span class="y">OPTIMAL</span></div><canvas id="trapB" class="glow"></canvas>
+          <div class="t16 d" style="margin-top:12px">STEPS <span class="w t32" id="trapBn">0</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · MST -->
+  <section class="slide" id="s-mst" data-builds="2" data-k="04 · THE FIX" data-v="NEAREST + MST">
+    <div class="h2">THE FIX: <span>NEAREST DOT + MST</span></div>
+    <div class="panel" style="left:48px;top:164px;padding:8px"><canvas id="mstBoard" class="glow"></canvas></div>
+    <button class="ab sm b abs" id="mstRun" style="left:48px;top:800px;flex-direction:row;gap:16px"><i data-g="↺"></i>REDRAW</button>
+    <div class="panel" style="left:700px;top:164px;width:852px;height:236px;padding:20px 32px">
+      <div class="sr"><span class="l r">Σ DISTANCES</span><span class="r" id="mSum">18</span></div>
+      <div class="sr"><span class="l"><span class="y">NEAREST</span> + <span class="c">MST</span></span><span><span class="y" id="mNear">1</span> + <span class="c" id="mTree">10</span> = <span class="w" id="mMst">11</span></span></div>
+      <div class="sr"><span class="l g">TRUE OPTIMAL</span><span class="g" id="mOpt">11</span></div>
+    </div>
+    <div data-build="1" class="panel" style="left:700px;top:432px;width:852px;height:290px;padding:24px 32px">
+      <div class="ptitle" style="margin-bottom:16px">WHY IT NEVER OVERESTIMATES</div>
+      <div class="t16" style="line-height:2.1">
+        <div><span class="y">1</span> ANY ROUTE EATS THE DOTS IN SOME ORDER.</div>
+        <div><span class="y">2</span> THOSE HOPS FORM A TREE → COST ≥ <span class="c">MST</span>.</div>
+        <div><span class="y">3</span> FIRST IT MUST REACH A DOT → + <span class="y">NEAREST</span>.</div>
+        <div class="g">WALLS ONLY ADD DISTANCE → h ≤ TRUE COST.</div>
+      </div>
+    </div>
+    <div data-build="2" class="panel code" style="left:700px;top:754px;width:852px;height:180px;padding:16px 0 0">
+      <div class="lines" id="mstCode"></div>
+    </div>
+  </section>
+
+  <!-- 7 · RELAXED PROBLEMS -->
+  <section class="slide" id="s-relax" data-builds="2" data-k="05 · BETTER H" data-v="RELAX THE RULES">
+    <div class="h2">WHERE GOOD H COMES FROM: <span>RELAX THE RULES</span></div>
+    <div class="panel" style="left:48px;top:164px;padding:8px"><canvas id="relaxBoard" class="glow"></canvas></div>
+    <div class="abs t13 lh" style="left:48px;top:790px;width:600px" id="relaxKey"></div>
+    <div class="panel" style="left:672px;top:164px;width:880px;height:484px;padding:24px 30px">
+      <div class="row" style="justify-content:space-between"><span class="ptitle">h AT THE START · SAME MAZE</span><span class="ptitle">A* EXPANDS</span></div>
+      <div id="ladder" style="position:relative;margin-top:16px"></div>
+    </div>
+    <div data-build="0" data-until="0" class="panel callout" style="left:672px;top:676px;width:880px;height:248px;padding:24px 30px">
+      <h3>RELAXED PROBLEM = SAME PUZZLE, FEWER RULES.</h3>
+      <p>FEWER RULES CAN ONLY MAKE IT EASIER, SO ITS EXACT ANSWER IS NEVER MORE THAN THE REAL ONE. <span class="g">ADMISSIBLE FOR FREE.</span></p>
+    </div>
+    <div data-build="1" data-until="1" class="panel callout" style="left:672px;top:676px;width:880px;height:248px;padding:24px 30px">
+      <h3>OUR MST DROPS TWO RULES.</h3>
+      <p><span class="n">1</span>WALK THROUGH WALLS. <span class="n" style="margin-left:18px">2</span>JUMP BACK TO ANY EATEN DOT.</p>
+      <p>CHEAP TO COMPUTE, BUT LOOSE: <span class="c" id="rl1">14</span> WHEN THE TRUTH IS <span class="g" id="rl2">29</span>.</p>
+    </div>
+    <div data-build="2" data-until="2" class="panel callout" style="left:672px;top:676px;width:880px;height:248px;padding:24px 30px">
+      <h3>PUT THE WALLS BACK: MST ON REAL CORRIDORS.</h3>
+      <p>h JUMPS TO <span class="g" id="rl3">28</span>. A* EXPANDS <span class="w" id="rl4">146</span> → <span class="g" id="rl5">31</span> STATES. STILL ADMISSIBLE.</p>
+      <p class="d">COST: ONE BFS PER DOT, ONCE, BEFORE THE SEARCH.</p>
+    </div>
+  </section>
+
+  <!-- 8 · TRIALS -->
+  <section class="slide" id="s-trials" data-builds="0" data-k="06 · EVIDENCE" data-v="500 MAZES">
+    <div class="abs cast-key"><span><canvas class="sp s" data-i="pac"></canvas>A* + MST</span><span><canvas class="sp s" data-i="#ff2d2d"></canvas>A* + Σ</span><span><canvas class="sp s" data-i="#00f0ff"></canvas>BFS</span></div>
+    <div class="h2">EVIDENCE · <span>500 RANDOM MAZES, LIVE</span></div>
+    <div class="panel" style="left:48px;top:164px;width:560px;height:756px;padding:34px 34px">
+      <div class="t16 lh">SEARCH WITH <span class="r">Σ DIST</span><br>RETURNS A LONGER PATH IN</div>
+      <div class="r" style="font-size:124px;margin:30px 0 18px;text-shadow:6px 6px 0 #600"><span id="tPct">0</span>%</div>
+      <div class="t16 lh">OF MAZES<br>AVG <span class="w" id="tExtra">+0</span> · WORST <span class="w" id="tWorst">+0</span></div>
+      <div style="border-top:3px dashed var(--dim2);margin:34px 0 30px"></div>
+      <div class="row t16" style="gap:16px"><canvas class="sp" data-i="pac"></canvas><span class="y">A* + NEAREST + MST</span></div>
+      <div class="t24 lh" style="margin-top:20px">OPTIMAL IN <span class="g" id="tMst">0 / 0</span></div>
+      <div class="t13 d lh" style="position:absolute;left:34px;bottom:26px">TRIALS <span id="tN">0</span>/500 · 20% WALLS<br>SEED 2026 = <span class="w">SAME 500 MAZES EVERY RUN</span></div>
+    </div>
+    <div class="panel" style="left:640px;top:164px;width:560px;height:756px;padding:28px 30px">
+      <div class="row" style="justify-content:space-between"><div class="ptitle">MAZE <span class="w" id="tCur">0</span> / 500</div><div class="t13" id="tVerdict"></div></div>
+      <div class="tboard"><canvas id="tBoard"></canvas></div>
+      <div class="t13 lh" style="margin-top:12px"><span class="sw" style="background:var(--red)"></span> Σ PATH &nbsp; <span class="sw dot"></span> OPTIMAL (BFS)</div>
+      <div class="mosaic" id="mosaic" style="margin-top:14px"></div>
+      <div class="t13 lh" style="margin-top:12px"><span class="r">■</span> Σ LONGER &nbsp; <span style="color:#2a3480">■</span> SAME &nbsp; <span class="d">TAP A SQUARE</span></div>
+      <div class="seg" id="trialSeg" style="margin-top:16px"><button data-cfg="0">5×5·3</button><button data-cfg="1" class="on">5×5·5</button><button data-cfg="2">7×7·6</button></div>
+    </div>
+    <div class="panel" style="left:1232px;top:164px;width:320px;height:756px;padding:28px 26px">
+      <div class="ptitle lh">AVG STATES<br>EXPANDED</div>
+      <div class="bar" style="--c:var(--cyan)"><div class="row" style="justify-content:space-between"><span class="c">BFS</span><span class="w" id="tB0">0</span></div><div class="tk"><div class="fill" id="tBar0"></div></div></div>
+      <div class="bar" style="--c:var(--red)"><div class="row" style="justify-content:space-between"><span class="r">Σ DIST</span><span class="w" id="tB1">0</span></div><div class="tk"><div class="fill" id="tBar1"></div></div></div>
+      <div class="bar" style="--c:var(--pac)"><div class="row" style="justify-content:space-between"><span class="y">MST</span><span class="w" id="tB2">0</span></div><div class="tk"><div class="fill" id="tBar2"></div></div></div>
+      <div class="bar" style="--c:var(--green)"><div class="row" style="justify-content:space-between"><span class="g">MAZE</span><span class="w" id="tB3">0</span></div><div class="tk"><div class="fill" id="tBar3"></div></div></div>
+      <div class="t16 lh g" style="margin-top:40px">TIGHTER H,<br>LESS WORK.</div>
+      <button class="ab sm g abs" id="trialSkip" style="left:26px;bottom:110px;flex-direction:row;gap:14px"><i data-g="»|"></i>SKIP TO 500</button>
+      <button class="ab sm y abs" id="trialGo" style="left:26px;bottom:26px;flex-direction:row;gap:14px"><i data-g="↺"></i>RERUN</button>
+    </div>
+  </section>
+
+  <!-- 10 · TRADE-OFF MAP -->
+  <section class="slide" id="s-trade" data-skip data-builds="2" data-k="07 · TRADE-OFFS" data-v="TIME VS MEMORY">
+    <div class="h2">EVERY SEARCH PAYS <span>IN TIME, MEMORY OR QUALITY</span></div>
+    <div class="panel" style="left:48px;top:164px;width:1000px;height:756px;padding:16px"><canvas id="tradeMap" class="tmc"></canvas></div>
+    <div class="panel card" id="tradeCard" style="left:1080px;top:164px;width:472px;height:756px;padding:30px"></div>
+  </section>
+
+  <!-- 11 · IT'S A TSP -->
+  <section class="slide" id="s-tsp" data-builds="2" data-k="08 · PLOT TWIST" data-v="IT'S A TSP">
+    <div class="h2">PLOT TWIST: <span>IT'S A TRAVELLING SALESMAN</span></div>
+    <div class="panel" style="left:48px;top:164px;padding:8px"><canvas id="tspBoard" class="glow"></canvas></div>
+    <div class="abs t16 lh" style="left:48px;top:790px;width:850px" id="tspOrder"></div>
+    <div data-build="0" data-until="0" class="panel callout" style="left:928px;top:164px;width:624px;height:756px">
+      <h3>EATING EVERY DOT = PICKING AN ORDER.</h3>
+      <p>BETWEEN TWO DOTS, ALWAYS TAKE THE SHORTEST CORRIDOR. SO THE ONLY REAL CHOICE IS <span class="y">WHICH DOT NEXT</span>.</p>
+      <p>SHORTEST ROUTE THROUGH EVERY POINT = THE <span class="c">TRAVELLING SALESMAN PROBLEM</span>.</p>
+      <p><span class="r">NP-HARD.</span> NOBODY KNOWS A FAST EXACT ALGORITHM.</p>
+      <div class="apps">
+        <div class="ptitle">SAME PROBLEM, REAL WORLD</div>
+        <div class="t16 lh" style="margin-top:12px"><span class="o">■</span> DELIVERY ROUTES<br><span class="o">■</span> WAREHOUSE PICKING ROBOTS<br><span class="o">■</span> ROBOT VACUUMS<br><span class="o">■</span> GAME NPC PATHFINDING</div>
+      </div>
+    </div>
+    <div data-build="1" data-until="1" class="panel" style="left:928px;top:164px;width:624px;height:756px;padding:26px 0 0">
+      <div class="ptitle" style="padding:0 30px">GROUND TRUTH: HELD-KARP DYNAMIC PROGRAMMING</div>
+      <div class="code" style="margin-top:14px"><div class="lines" id="hkCode"></div></div>
+      <div class="t16 lh" style="padding:22px 30px 0">BEST[SET, LAST DOT]: TRY EVERY ORDER, BUT SHARE THE SUB-ANSWERS.</div>
+      <div class="t16 lh" style="padding:16px 30px 0">TIME <span class="o">O(2<sup style="font-size:10px">k</sup>·k²)</span> · MEMORY <span class="o">O(2<sup style="font-size:10px">k</sup>·k)</span></div>
+      <div class="t18 lh" style="padding:24px 30px 0"><span class="g"><i class="ck"></i> 300 / 300 MAZES</span><br>SAME ANSWER AS A* + MAZE-MST.</div>
+    </div>
+    <div data-build="2" class="panel" style="left:928px;top:164px;width:624px;height:756px;padding:26px 30px">
+      <div class="ptitle">WHO HITS THE WALL FIRST? · ARCADE MAZE, k RANDOM DOTS</div>
+      <div class="wt" id="wallTable" style="margin-top:22px"></div>
+      <div class="t13 d lh" style="margin-top:18px">TIMES MEASURED IN NODE ON A LAPTOP.<br>BFS 18 DOTS = 74M STATES · HELD-KARP 24 DOTS = 3 GB TABLE</div>
+      <div class="t18 lh" style="margin-top:34px">A GOOD H <span class="g">PUSHES THE WALL BACK</span>.<br>IT DOES NOT <span class="r">REMOVE</span> IT.</div>
+    </div>
+  </section>
+
+  <!-- 12 · 220 DOTS -->
+  <section class="slide" id="s-tour" data-builds="5" data-k="09 · SCALE" data-v="220 DOTS">
+    <div class="h2">220 DOTS · <span>WHEN EXACT SEARCH GIVES UP</span></div>
+    <div class="panel" style="left:48px;top:164px;padding:8px"><canvas id="tourBoard" class="glow"></canvas></div>
+
+    <div data-build="0" data-until="0" class="panel rt" style="top:164px;height:752px;padding:30px 30px">
+      <div class="ptitle">STATE SPACE</div>
+      <div class="big" style="margin-top:22px">282 × 2<sup>220</sup></div>
+      <div class="t20 lh" style="margin-top:18px">≈ 10<sup style="font-size:12px">69</sup> STATES. <span class="r">NO MEMORY ON EARTH.</span></div>
+      <div style="border-top:3px dashed var(--dim2);margin:30px 0 22px"></div>
+      <div class="row t16" style="gap:14px"><canvas class="sp s" data-i="pac"></canvas><span class="y">A* + MAZE-MST TRIES:</span></div>
+      <div class="att">
+        <span class="w">30 DOTS</span><span class="g"><i class="ck"></i> 0.2 S</span>
+        <span class="w">40 DOTS</span><span class="g"><i class="ck"></i> 0.2 S</span>
+        <span class="w">60 DOTS</span><span class="r"><i class="xx"></i> GAVE UP @ 300K</span>
+        <span class="w">220 DOTS</span><span class="r"><i class="xx"></i> GAVE UP @ 5 MIN</span>
+      </div>
+      <div class="t16 lh c" style="margin-top:44px">NEW PLAN: STOP SEARCHING STATES.<br>SEARCH <span class="y">ROUTES</span> INSTEAD.</div>
+    </div>
+
+    <div data-build="1" class="panel rt" style="top:164px;height:752px;padding:26px 28px">
+      <div class="ptitle">ROUTE LENGTH · VISIT ORDER OF 220 DOTS</div>
+      <div style="margin-top:14px">
+        <div class="sc" data-build="1"><span class="d">1</span><span class="r">RANDOM ORDER</span><span class="v" id="lenR">–</span></div>
+        <div class="sc" data-build="2"><span class="d">2</span><span class="o">GREEDY: NEAREST DOT</span><span class="v" id="lenG">–</span></div>
+        <div class="sc" data-build="3"><span class="d">3</span><span class="c">HILL CLIMB · 2-OPT</span><span class="v" id="lenH">–</span><span class="tag r" id="stuck"></span></div>
+        <div class="sc" data-build="4"><span class="d">4</span><span class="p">SIMULATED ANNEALING</span><span class="v" id="lenS">–</span></div>
+      </div>
+      <div data-build="4" data-until="4" style="margin-top:18px">
+        <div class="row t13" style="justify-content:space-between"><span class="d">TEMPERATURE</span><span class="w" id="saT">3.00</span></div>
+        <div class="gauge"><div id="saG"></div></div>
+        <div class="row t13" style="justify-content:space-between;margin-top:18px"><span class="d">WORSE MOVES ACCEPTED</span><span class="r" id="saW">0</span></div>
+        <canvas id="saSpark" style="margin-top:18px;width:512px;height:150px"></canvas>
+        <div class="t13 d lh" style="margin-top:8px">HOT: TAKES BAD MOVES TO ESCAPE TRAPS.<br>COLD: ONLY GOOD MOVES. LIKE COOLING METAL.</div>
+      </div>
+      <div data-build="5" style="position:absolute;left:28px;right:28px;top:300px">
+        <div class="ptitle">HOW GOOD IS 256?</div>
+        <div class="nl" id="nl"></div>
+        <div class="t16 lh" style="margin-top:6px">A* GAVE UP, BUT IT <span class="y">PROVED</span><br>NOTHING BEATS <span class="g">226</span>.</div>
+        <div class="t16 lh" style="margin-top:14px">SO ANNEALING IS WITHIN<br><span class="g">13% OF OPTIMAL</span> <span class="d">IN 0.1 S.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · GHOSTS -->
+  <section class="slide" id="s-ghost" data-skip data-builds="1" data-k="10 · GHOSTS" data-v="AS A COST">
+    <div class="h2">GHOSTS → <span>A WEIGHTED GRAPH</span></div>
+    <div class="panel" style="left:48px;top:164px;padding:8px"><canvas id="ghostBoard" class="glow"></canvas></div>
+    <div class="panel" style="left:700px;top:164px;width:852px;height:210px;padding:28px 32px">
+      <div class="t20 lh">TILES NEXT TO A <span class="o">GHOST</span> COST <span class="r">10</span>, NOT 1.</div>
+      <div class="t13 d" style="margin-top:22px">THE ONLY CODE CHANGE, LINE 14:</div>
+      <div class="mono t24" style="margin-top:12px">ng = gc + <span class="c">cost</span>(nxt)</div>
+    </div>
+    <div data-build="1" class="panel" style="left:700px;top:410px;width:852px;height:350px;padding:28px 32px">
+      <div class="row t18" style="gap:16px"><canvas class="sp" data-i="#00f0ff"></canvas><span class="c">BFS · COUNTS STEPS</span></div>
+      <div class="t22" style="margin:16px 0 0 58px"><span class="w" id="gB">0</span> STEPS · COST <span class="r" id="gBc">0</span></div>
+      <div class="row t18" style="gap:16px;margin-top:44px"><canvas class="sp" data-i="pac"></canvas><span class="y">A* · COUNTS COST</span></div>
+      <div class="t22" style="margin:16px 0 0 58px"><span class="w" id="gA">0</span> STEPS · COST <span class="g" id="gAc">0</span></div>
+    </div>
+    <div data-build="1" class="abs row" style="left:700px;top:800px;width:852px;justify-content:space-between">
+      <div class="t13 lh d">EVERY STEP STILL COSTS ≥ 1<br><span class="g">→ MST STAYS ADMISSIBLE</span></div>
+      <button class="ab sm b" id="ghostRun" style="flex-direction:row;gap:14px"><i data-g="↺"></i>REPLAY</button>
+    </div>
+  </section>
+
+  <!-- 11 · MINIMAX -->
+  <section class="slide" id="s-minimax" data-builds="3" data-k="11 · ADVERSARIAL" data-v="MINIMAX">
+    <div class="h2">GHOSTS FIGHT BACK · <span>MINIMAX</span></div>
+    <div class="panel" style="left:48px;top:164px;padding:8px"><canvas id="duelBoard" class="glow"></canvas></div>
+    <div class="panel" style="left:808px;top:164px;width:744px;height:430px;padding:18px 20px">
+      <div class="ptitle">GAME TREE · ONE ROUND AHEAD</div>
+      <canvas id="mmTree" style="margin-top:8px"></canvas>
+    </div>
+    <div class="panel gp" style="left:808px;top:622px;width:744px;height:298px">
+      <div data-build="0" data-until="0" class="gk">
+        <div class="row"><i class="nd max"></i><span><span class="y">PAC-MAN = MAX</span> · TAKES THE HIGHEST</span></div>
+        <div class="row"><i class="nd min"></i><span><span class="r">GHOST = MIN</span> · TAKES THE LOWEST</span></div>
+        <div class="row"><i class="nd leaf"></i><span>LEAF = SCORE - STEPS TO NEAREST DOT</span></div>
+        <div class="t13 d">+10 A DOT · -1 A MOVE · -500 CAUGHT</div>
+      </div>
+      <div data-build="1" data-until="1" class="gk">
+        <div class="t18 lh">EACH MOVE IS WORTH ITS <span class="r">WORST CASE</span>.</div>
+        <div class="t16 lh">UP <span class="w">-3</span> · RIGHT <span class="g">7</span> · LEFT <span class="r">-491</span><br>→ GO <span class="g">RIGHT</span>: THE SAFE DOT.</div>
+        <div class="t13 d lh">GREEDY IGNORES GHOSTS: IT GOES LEFT<br>AND GETS EATEN IF THE GHOST STEPS UP.</div>
+      </div>
+      <div data-build="2" data-until="2" class="gk">
+        <div class="t16 lh"><span class="c">ALPHA-BETA PRUNING</span><br>LEFT ≤ -491, WORSE THAN 7. <span class="d">SKIP THE REST.</span></div>
+        <div class="abt" id="abTable"></div>
+      </div>
+      <div data-build="3" class="gk">
+        <div class="t16"><span class="y">LIVE</span> · DEPTH 3 VS A <span class="r">CHASING</span> GHOST</div>
+        <div class="t22">WON <span class="g" id="mmW">0</span> · CAUGHT <span class="r" id="mmL">0</span></div>
+        <div class="t13 d lh">1,000 GAMES · GREEDY WINS <span class="r">4%</span> · MINIMAX WINS <span class="g">100%</span></div>
+      </div>
+    </div>
+    <div class="abs t13 d lh" style="left:48px;top:770px;width:720px" id="mmInfo">ONE GHOST, 8 DOTS. PAC-MAN MOVES, THEN THE GHOST.<br>THE GHOST IS NOT A WALL ANY MORE. <span class="r">IT THINKS.</span></div>
+  </section>
+
+  <!-- 12 · EXPECTIMAX -->
+  <section class="slide" id="s-expecti" data-builds="2" data-k="12 · ADVERSARIAL" data-v="EXPECTIMAX">
+    <div class="h2">GHOSTS ROLL DICE · <span>EXPECTIMAX</span></div>
+    <div class="panel" style="left:48px;top:164px;padding:8px"><canvas id="pocketBoard" class="glow"></canvas></div>
+    <div class="abs row" style="left:48px;top:846px;gap:18px">
+      <button class="ab sm" id="pkMM" style="flex-direction:row;gap:12px"><i data-g="▶"></i>MINIMAX</button>
+      <button class="ab sm b" id="pkEX" style="flex-direction:row;gap:12px"><i data-g="▶"></i>EXPECTIMAX</button>
+      <span class="t13 d" id="pkInfo"></span>
+    </div>
+    <div class="panel" style="left:808px;top:164px;width:744px;height:430px;padding:18px 20px">
+      <div class="ptitle" id="exTitle">MINIMAX · 3 ROUNDS AHEAD</div>
+      <canvas id="exTree" style="margin-top:8px"></canvas>
+    </div>
+    <div class="panel gp" style="left:808px;top:622px;width:744px;height:298px">
+      <div data-build="0" data-until="0" class="gk">
+        <div class="t18 lh">CORNERED. IF THE GHOST IS <span class="r">PERFECT</span>,<br>EVERY ROUTE ENDS IN DEATH.</div>
+        <div class="t16 lh">SO MINIMAX DIES <span class="r">NOW</span>:<br>-501 BEATS -502 (ONE MOVE CHEAPER).</div>
+      </div>
+      <div data-build="1" data-until="1" class="gk">
+        <div class="t18 lh">REAL GHOST = <span class="c">RANDOM</span>. ONLY 1 MOVE IN 4<br>WALKS INTO THE POCKET.</div>
+        <div class="t16 lh"><span class="c">CHANCE NODE</span> = AVERAGE, NOT WORST.<br>DOWN = -130.5 &gt; -501 → <span class="g">WAIT, THEN ESCAPE</span>.</div>
+      </div>
+      <div data-build="2" class="gk">
+        <div class="ptitle">1,000 GAMES · WIN RATE</div>
+        <div class="wr"><span></span><span class="d">RANDOM GHOST</span><span class="d">CHASING GHOST</span>
+          <span class="r"><i class="nd min" style="width:16px;height:13px;margin-right:10px"></i>MINIMAX</span><span class="w">0%</span><span class="w">0%</span>
+          <span class="c"><i class="nd chance" style="width:14px;height:14px;margin-right:10px"></i>EXPECTIMAX</span><span class="g">69%</span><span class="w">3%</span></div>
+        <div class="t13 lh">MINIMAX PLANS FOR THE <span class="r">WORST</span> GHOST. EXPECTIMAX FOR<br>THE GHOST YOU <span class="c">ACTUALLY HAVE</span>. MODEL YOUR ENEMY.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · TAKEAWAYS -->
+  <section class="slide" id="s-end" data-builds="6" data-k="13 · TAKEAWAYS" data-v="GAME OVER?">
+    <div class="h2">FIVE THINGS <span>TO REMEMBER</span></div>
+    <div class="abs hs" style="left:120px;top:180px;width:1380px;gap:22px 30px;font-size:20px">
+      <span data-build="1" class="y">1ST</span><span data-build="1">THE STATE IS <span class="y">(POSITION, DOTS LEFT)</span>.<br><span class="d t13">THAT'S WHY EATING EVERY DOT EXPLODES: N × 2<sup>k</sup>.</span></span>
+      <span data-build="2" class="o">2ND</span><span data-build="2">GOOD H = <span class="g">EXACT ANSWER TO A RELAXED PROBLEM</span>.<br><span class="d t13">Σ ISN'T ONE: LONGER PATH IN 77% OF MAZES. MST IS: 500 / 500.</span></span>
+      <span data-build="3" class="r">3RD</span><span data-build="3">TIGHTER H = LESS WORK, <span class="y">SAME ANSWER</span>.<br><span class="d t13">MST ON REAL CORRIDORS: 3× FEWER STATES, STILL OPTIMAL.</span></span>
+      <span data-build="4" class="c">4TH</span><span data-build="4">IT'S A <span class="c">TSP</span>. EXACT SEARCH HITS A WALL.<br><span class="d t13">ANNEALING + A*'S LOWER BOUND: 220 DOTS, WITHIN 13%.</span></span>
+      <span data-build="5" class="p">5TH</span><span data-build="5">GHOSTS PLAY BACK: SEARCH THE <span class="p">GAME TREE</span>.<br><span class="d t13">MINIMAX FOR A PERFECT ENEMY, EXPECTIMAX FOR A RANDOM ONE.</span></span>
+    </div>
+    <div data-build="6" class="panel limits" style="left:120px;top:668px;width:1360px;height:120px;padding:20px 30px">
+      <div class="t16 lh"><span class="r">LIMITS:</span> EXACT SEARCH STOPS NEAR 60 DOTS · MINIMAX NEEDS A TRUE GHOST MODEL</div>
+      <div class="t16 lh" style="margin-top:12px"><span class="g">LESSON:</span> RELAX THE RULES FOR h · AT THE WALL, SWITCH TO LOCAL SEARCH</div>
+    </div>
+    <div data-build="6" class="abs" style="left:0;right:0;top:812px;text-align:center">
+      <div style="font-size:48px;color:var(--pac);text-shadow:4px 4px 0 #ff8a00,8px 8px 0 #d43c00">THANK YOU! <span class="t24 c blink">QUESTIONS?</span></div>
+    </div>
+    <canvas id="endStrip" class="abs glow" data-build="6" style="left:128px;top:880px"></canvas>
+  </section>
+
+  <!-- 16 · YOUR TURN: LIVE EDITOR -->
+  <section class="slide" id="s-arena" data-builds="0" data-k="YOUR TURN" data-v="PLAY IT">
+    <div class="h2">YOUR TURN<span class="rec-hide"> · PACMANCHUONG.VERCEL.APP</span></div>
+    <div class="panel" style="left:48px;top:164px;padding:8px"><canvas id="edBoard" class="glow edit"></canvas></div>
+    <div class="tools edit">
+      <div class="seg" id="edTool"><button data-t="wall" class="on">▦ WALL</button><button data-t="dot">• DOT</button><button data-t="pac">ᗧ PAC</button></div>
+      <button class="ab sm b" id="edRand" style="flex-direction:row;gap:12px"><i data-g="?"></i>RANDOM</button>
+      <button class="ab sm" id="edClear" style="flex-direction:row;gap:12px"><i data-g="✕"></i>CLEAR</button>
+    </div>
+    <div class="abs t13 d lh" style="left:48px;top:884px;width:740px" id="edInfo"></div>
+    <div class="panel lb">
+      <div class="lh"><span></span><span>SEARCH</span><span>STEPS</span><span>EXPANDED</span><span style="text-align:right">MEMORY</span></div>
+      <div id="lbRows"></div>
+      <div class="qr rec-hide"><canvas id="qrC"></canvas><div class="t13">SCAN AND PLAY ON YOUR PHONE<br><span class="y t16">PACMANCHUONG.VERCEL.APP</span><br><span class="d" style="font-size:10px">TAP A ROW TO WATCH IT SEARCH · <span class="g"><i class="ck"></i></span> = SHORTEST<br>MEMORY = MOST STATES HELD AT ONCE</span></div></div>
+    </div>
+  </section>
+
+  <!-- 11 · BACKUP Q&A -->
+  <section class="slide" id="s-qa" data-builds="0" data-k="BONUS STAGE" data-v="BACKUP">
+    <div class="h2">BONUS STAGE · <span>BACKUP ANSWERS</span></div>
+    <div id="qaGrid"></div>
+  </section>
+
+  <div id="notesHot"></div>
+  <div id="notes"></div>
+  <div id="hint"><div>◀ TAP HERE: BACK</div><div>TAP HERE: NEXT ▶</div></div>
+  <div id="dock">
+    <button id="prevBtn" aria-label="Previous">◀</button>
+    <div id="dots"></div>
+    <span id="counter">1/17</span>
+    <button id="nextBtn" aria-label="Next">▶</button>
+    <button id="notesBtn" aria-label="Notes" style="font-size:14px">N</button>
+    <button id="fsBtn" aria-label="Fullscreen">⛶</button>
+  </div>
+  <div id="progress"></div>
+  <div id="crt"></div><div id="vig"></div>
+</div>
+<script src="legacy.js"></script>
+
+</body>
+</html>

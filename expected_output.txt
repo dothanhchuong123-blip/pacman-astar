@@ -1,0 +1,145 @@
+
+=== 1. Demo mazes (slides 2-7, 9) ===
+PASS  hook: A* with sum of distances (steps)                     got 48
+PASS  hook: A* with nearest + MST (steps)                        got 32
+PASS  hook: true optimum by BFS                                  got 32
+PASS  row of 3 dots: sum of distances h(start)                   got 6
+PASS  row of 3 dots: true cost                                   got 3
+PASS  trace: h(start) with sum of distances                      got 13
+PASS  trace: real cost                                           got 10
+PASS  trap: A* with sum of distances                             got 15
+PASS  trap: A* with nearest + MST                                got 9
+PASS  same tile, 3 dots left: more steps                         got 12
+PASS  same tile, 1 dot left: more steps                          got 4
+PASS  race: sum of distances                                     got 18
+PASS  race: nearest dot                                          got 1
+PASS  race: MST weight                                           got 10
+PASS  race: true optimum                                         got 11
+PASS  relax: true cost h*                                        got 29
+PASS  relax: h(start) MST on straight lines                      got 14
+PASS  relax: h(start) MST on real corridors                      got 28
+PASS  relax: h(start) sum of distances (overestimates)           got 35
+PASS  relax: states expanded by UCS (h = 0)                      got 502
+PASS  relax: states expanded, MST straight                       got 146
+PASS  relax: states expanded, MST corridors                      got 31
+PASS  ghost tiles: BFS steps                                     got 19
+PASS  ghost tiles: BFS real cost                                 got 73
+PASS  ghost tiles: A* steps                                      got 21
+PASS  ghost tiles: A* real cost                                  got 21
+PASS  arena: BFS expanded                                        got 3175
+PASS  arena: A* corridor-MST expanded                            got 101
+
+=== 2. Evidence: 500 random mazes per setting, seed 2026, 20% walls (slide 8) ===
+PASS  5x5/3: mazes where the sum-of-distances path is longer     got 153
+PASS  5x5/3: ... as a percentage                                 got 31
+PASS  5x5/3: worst extra steps                                   got 5
+PASS  5x5/3: mazes where nearest+MST is NOT optimal              got 0
+      average states expanded  BFS 64.9  sum 13.0  MST 10.7  corridor-MST 9.1
+PASS  5x5/5: mazes where the sum-of-distances path is longer     got 385
+PASS  5x5/5: ... as a percentage                                 got 77
+PASS  5x5/5: worst extra steps                                   got 9
+PASS  5x5/5: mazes where nearest+MST is NOT optimal              got 0
+      average states expanded  BFS 275.5  sum 27.8  MST 19.6  corridor-MST 13.9
+PASS  7x7/6: mazes where the sum-of-distances path is longer     got 446
+PASS  7x7/6: ... as a percentage                                 got 89
+PASS  7x7/6: worst extra steps                                   got 16
+PASS  7x7/6: mazes where nearest+MST is NOT optimal              got 0
+      average states expanded  BFS 1197.6  sum 67.3  MST 54.0  corridor-MST 26.1
+
+=== 3. Nine searches on 300 random 9x7 mazes with 8 dots, seed 2026 (slide 10, trade-offs) ===
+PASS  BFS      avg states expanded                               got 6263
+PASS  BFS      avg peak memory (states)                          got 6941
+PASS  BFS      mazes solved with the shortest path               got 300
+PASS  DFS      avg states expanded                               got 161
+PASS  DFS      avg peak memory (states)                          got 257
+PASS  DFS      mazes solved with the shortest path               got 0
+PASS  UCS      avg states expanded                               got 6263
+PASS  UCS      avg peak memory (states)                          got 7622
+PASS  UCS      mazes solved with the shortest path               got 300
+PASS  GREEDY   avg states expanded                               got 30
+PASS  GREEDY   avg peak memory (states)                          got 105
+PASS  GREEDY   mazes solved with the shortest path               got 198
+PASS  A* Σ     avg states expanded                               got 138
+PASS  A* Σ     avg peak memory (states)                          got 313
+PASS  A* Σ     mazes solved with the shortest path               got 6
+PASS  A* MST   avg states expanded                               got 142
+PASS  A* MST   avg peak memory (states)                          got 314
+PASS  A* MST   mazes solved with the shortest path               got 300
+PASS  A* MAZE  avg states expanded                               got 48
+PASS  A* MAZE  avg peak memory (states)                          got 149
+PASS  A* MAZE  mazes solved with the shortest path               got 300
+PASS  WA* ×2   avg states expanded                               got 31
+PASS  WA* ×2   avg peak memory (states)                          got 108
+PASS  WA* ×2   mazes solved with the shortest path               got 239
+PASS  IDA*     avg states expanded                               got 528
+PASS  IDA*     avg peak memory (states)                          got 25
+PASS  IDA*     mazes solved with the shortest path               got 300
+PASS  Held-Karp equals A* corridor-MST in 300 mazes              got 300
+PASS  BFS needs this many times more states than A* MST          got 44
+PASS  BFS needs this many times more states than A* corridor-MST got 130
+PASS  IDA* repeats this many times the work of A* corridor-MST   got 11
+PASS  tie-break on h saves (percent of states)                   got 34
+
+=== 4. Where exact search hits a wall (slide 11): k random dots of the 220-dot arcade maze, dots chosen with seed 2026 ===
+      dots   states BFS      Held-Karp table   A* corridor-MST
+        10              288,768            10,240   solved, cost 99, 185 expanded
+PASS  10 dots: A* optimal cost                                   got 99
+PASS  10 dots: A* states expanded                                got 185
+PASS  10 dots: Held-Karp gives the same cost                     got 99
+        14            4,620,288           229,376   solved, cost 99, 189 expanded
+PASS  14 dots: A* optimal cost                                   got 99
+PASS  14 dots: A* states expanded                                got 189
+PASS  14 dots: Held-Karp gives the same cost                     got 99
+        18           73,924,608         4,718,592   solved, cost 111, 310 expanded
+PASS  18 dots: A* optimal cost                                   got 111
+PASS  18 dots: A* states expanded                                got 310
+PASS  18 dots: Held-Karp gives the same cost                     got 111
+        24        4,731,174,912       402,653,184   solved, cost 118, 524 expanded
+PASS  24 dots: A* optimal cost                                   got 118
+PASS  24 dots: A* states expanded                                got 524
+        40   310,062,279,032,832   43,980,465,111,040   solved, cost 146, 18291 expanded
+PASS  40 dots: A* optimal cost                                   got 146
+PASS  40 dots: A* states expanded                                got 18291
+        60   325,123,864,299,130,847,232   69,175,290,276,410,818,560   stopped after 300000 expanded, proven >= 178
+PASS  60 dots: A* gives up inside 300,000 expansions             got false
+PASS  BFS state count for 18 dots is about 74 million            got 74
+PASS  BFS state count for 220 dots is about 10^69                got 69
+PASS  Held-Karp table for 24 dots is about 3 GB (8-byte cells)   got 3
+
+=== 5. 220 dots: searching routes instead of states (slide 12) ===
+PASS  number of dots                                             got 220
+PASS  random visiting order (seed 7)                             got 4186
+PASS  greedy: always the nearest dot                             got 309
+PASS  hill climbing with 2-opt, starts from greedy               got 293
+PASS  simulated annealing (seed 4, T0 3, 2,000,000 steps)        got 256
+      MST lower bound on the dot graph: 220 (one step per dot is the trivial bound)
+      (skipped: A* lower bound of 226 on 220 dots, run with --full, about 2 minutes)
+
+=== 6. Ghosts that fight back (slides 13-14) ===
+PASS  minimax value of UP                                        got -3
+PASS  minimax value of RIGHT                                     got 7
+PASS  minimax value of LEFT                                      got -491
+PASS  depth 3: nodes minimax                                     got 651
+PASS  depth 3: nodes alpha-beta                                  got 305
+PASS  depth 3: same move and same value                          got true
+PASS  depth 4: nodes minimax                                     got 6105
+PASS  depth 4: nodes alpha-beta                                  got 1794
+PASS  depth 4: same move and same value                          got true
+PASS  depth 5: nodes minimax                                     got 40061
+PASS  depth 5: nodes alpha-beta                                  got 6923
+PASS  depth 5: same move and same value                          got true
+PASS  depth 6: nodes minimax                                     got 363790
+PASS  depth 6: nodes alpha-beta                                  got 16348
+PASS  depth 6: same move and same value                          got true
+PASS  depth 6: alpha-beta saves this factor                      got 22
+PASS  1,000 games vs chasing ghost: greedy wins (percent)        got 4
+PASS  1,000 games vs chasing ghost: alpha-beta depth 3 wins (percent) got 100
+PASS  pocket: minimax value of the move that dies now            got -501
+PASS  pocket: minimax value of the other move                    got -502
+PASS  pocket: expectimax value of waiting (rounded to 1 decimal) got -130.5
+PASS  pocket, random ghost: minimax wins (percent)               got 0
+PASS  pocket, random ghost: expectimax wins (percent)            got 69
+PASS  pocket, chasing ghost: minimax wins (percent)              got 0
+PASS  pocket, chasing ghost: expectimax wins (percent)           got 3
+
+119 / 119 checks match the report.  ALL GOOD

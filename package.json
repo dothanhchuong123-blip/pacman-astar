@@ -1,0 +1,14 @@
+{
+  "name": "pacman-astar",
+  "version": "1.0.0",
+  "description": "Pac-Man pathfinding with A*: eat every dot in the fewest steps. Search engine, heuristics, experiments and an interactive demo.",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "reproduce": "node reproduce.js",
+    "reproduce:full": "node reproduce.js --full",
+    "python": "python3 python/astar.py",
+    "demo": "python3 -m http.server 8000"
+  },
+  "engines": { "node": ">=18" }
+}
